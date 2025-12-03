@@ -1,0 +1,31 @@
+#!/bin/bash
+# config.sh.example
+# 复制此文件为 config.sh 并填入实际路径
+
+# ===== 必要配置 =====
+# VCF文件路径
+VCF_X="/path/to/your/chrX.vcf.gz"
+VCF_Y="/path/to/your/chrY.vcf.gz"
+VCF_MT="/path/to/your/chrM.vcf.gz"
+
+# 样本信息文件 (应包含两列: 样本ID 群体ID)
+INFO_FILE="/path/to/your/sample_info.txt"
+
+# 男性样本文件 (每行一个样本ID)
+MALE_SAMPLES_FILE="/path/to/your/male_samples.txt"
+
+# ===== 可选配置 =====
+# PHLASH环境
+PHLASH_ENV="/path/to/your/conda/env/bin/activate"
+
+# 输出目录
+RESULTS_DIR="results"
+
+# 分析参数
+MUTATION_RATE="1.25e-8"
+KNOTS=20
+REG_PENALTY=6.0
+SPLINE_TYPE="piecewise"
+SEED="shuf_random_seed.txt"
+SAMPLE_SIZE=15
+MIN_MALE_SAMPLES=15
