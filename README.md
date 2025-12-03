@@ -50,6 +50,74 @@ sbatch VCF_Extraction.sh
 | `final_filtered.vcf.gz`  | 最终VCF（去除mask区域，可用于下游分析） |
 
 
+
+
+---
+
+# run_phlash_20251127_XYmt.sh
+
+### PHLASH 性染色体分析脚本
+
+**功能**：
+该脚本用于对性染色体（X、Y、MT）进行 PHLASH 分析，功能包括：
+
+* 群体样本提取
+* 男性样本选择（仅针对Y染色体）
+* 随机选择样本子集
+* 性染色体 contig 构建
+* PHLASH 模型拟合和绘图
+
+**特点**：
+
+* 支持多群体分析
+* 可扩展到任意群体和染色体
+* 输出结构化目录：`plots/`、`models/`、`logs/`、`python_scripts/`
+
+---
+
+### 使用方法
+
+1. **修改参数**
+   在脚本开头修改以下路径和参数：
+
+```bash
+POPULATIONS=("POP1" "POP2")
+VCF_X="/path/to/chrX.vcf.gz"
+VCF_Y="/path/to/chrY.vcf.gz"
+VCF_MT="/path/to/chrM.vcf.gz"
+MALE_SAMPLES_FILE="/path/to/male_samples.txt"
+INFO_FILE="/path/to/sample_info.txt"
+SEED="/path/to/random_seed.txt"
+```
+
+2. **提交SLURM作业**
+
+```bash
+sbatch PHLASH_SexChrom.sh
+```
+
+3. **输出文件结构**
+
+```
+results/
+└─ POP_CHROM/
+   ├─ plots/                # PHLASH绘图
+   ├─ models/               # 拟合结果
+   ├─ logs/                 # 日志
+   └─ python_scripts/       # 生成的Python脚本
+```
+
+4. **注意事项**
+
+* Y染色体分析仅使用男性样本，默认最多抽取15个样本
+* X和MT染色体分析使用随机样本子集
+* Python 脚本需根据需求进一步调用 `phlash.contig` 和 `phlash.fit`
+
+---
+
+
+
+
 # plot_Ne_CCRSplit_20251203
 **Python绘图可视化脚本使用示例**：
 - `--base_dir`：指定包含群体数据的基础目录路径
