@@ -1,0 +1,30 @@
+#!/bin/bash
+# config.sh.example
+# 复制此文件为 config.sh 并填入实际路径
+
+# ===== 必要配置 =====
+# VCF文件路径（phased VCF）
+VCF="/path/to/your/phased.vcf.gz"
+
+# 样本信息文件 (应包含两列: 样本ID 群体ID)
+INFO_FILE="/path/to/your/sample_info.txt"
+
+# PHLASH环境（conda环境或软件路径）
+PHLASH_ENV="/path/to/your/conda/env/bin/activate"
+
+# ===== 可选配置 =====
+# 输出目录
+RESULTS_DIR="results"
+
+# 分析参数
+MUTATION_RATE="1.25e-8"
+KNOTS=20
+REG_PENALTY=6.0
+SPLINE_TYPE="piecewise"
+SEED="shuf_random_seed.txt"
+SAMPLE_PER_POP=10
+MIN_CONTIGS=50
+MAX_CHROMOSOMES=22
+
+# 掩码文件（可选）
+# MASK_FILE="/path/to/your/mask.bed.gz"
