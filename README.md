@@ -5,6 +5,18 @@ a developed, robust, expandable pipeline to use phlash to analyse Ne curve and c
 
 ---
 
+# General Notice
+**Chromosome naming convention:**
+
+The pipeline uses GRCh38 reference genome coordinates. Chromosomes should be named as follows:
+
+* Autosomes: `chr1`, `chr2`, …, `chr22` (or `chr1_23` if you combine all autosomes)
+* Sex chromosomes: `chrX`, `chrY`
+* Mitochondrial genome: `chrM`
+
+> Notice that all positions and windows in the scripts are based on the GRCh38 coordinate system.
+
+---
 
 # **VCF_Extraction.sh** 
 是一个多群体 VCF 预处理脚本，用于：
