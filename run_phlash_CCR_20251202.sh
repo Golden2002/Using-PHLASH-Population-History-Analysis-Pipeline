@@ -75,9 +75,13 @@ else
     echo "合并群体: $COMBINED_POP"
     
     # 解析合并群体名称
-    IFS='::' read -ra POP_ARRAY <<< "$COMBINED_POP"
-    POP1=${POP_ARRAY[0]}
-    POP2=${POP_ARRAY[1]}
+    # IFS='::' read -ra POP_ARRAY <<< "$COMBINED_POP"
+    # POP1=${POP_ARRAY[0]}
+    # POP2=${POP_ARRAY[1]}
+    IFS='::' read -r POP1 POP2 <<< "$COMBINED_POP"
+    # 去掉多余的冒号或空格
+    POP1=$(echo "$POP1" | tr -d ':[:space:]')
+    POP2=$(echo "$POP2" | tr -d ':[:space:]')
     echo "包含群体: $POP1 和 $POP2"
 fi
 
