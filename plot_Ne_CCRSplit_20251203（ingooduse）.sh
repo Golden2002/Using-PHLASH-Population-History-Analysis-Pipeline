@@ -50,7 +50,7 @@ def divergence_time_ccr(T: np.ndarray, ccr_curve: np.ndarray, threshold: float =
     idx = np.where(ccr_curve < threshold)[0]
     if len(idx) == 0:
         # 如果CCR始终高于阈值，尝试其他阈值
-        for alt_threshold in [0.6, 0.7, 0.8]:
+        for alt_threshold in [0.6, 0.7, 0.8, 1.0, 1.2]:
             idx = np.where(ccr_curve < alt_threshold)[0]
             if len(idx) > 0:
                 print(f"使用替代阈值 {alt_threshold} 检测到分歧时间")
@@ -63,6 +63,61 @@ def load_phlash_results(result_path: str) -> Any:
     with open(result_path, 'rb') as f:
         results = pickle.load(f)
     return results
+
+# 在 divergence_time_ccr 函数之后添加以下函数（大约第 55 行后）
+
+### 2025.12.05第二次修改
+def calculate_threshold_range(T: np.ndarray, ccr_curve: np.ndarray,
+                            base_threshold: float, delta: float = 0.05) -> Dict[str, Optional[float]]:
+    """
+    计算选定阈值附近±delta范围内的分歧时间范围
+
+    参数:
+    -----------
+    T : np.ndarray
+        时间点数组
+    ccr_curve : np.ndarray
+        CCR曲线值数组
+    base_threshold : float
+        基础阈值（例如0.5, 0.8等）
+    delta : float
+        阈值波动范围，默认±0.05
+
+    返回:
+    -----------
+    time_range : dict
+        包含以下键的字典:
+        - 'lower_time': 阈值-delta对应的分歧时间
+        - 'base_time': 基础阈值对应的分歧时间
+        - 'upper_time': 阈值+delta对应的分歧时间
+        - 'lower_threshold': 阈值-delta
+        - 'upper_threshold': 阈值+delta
+    """
+    thresholds = {
+        'lower_threshold': max(0.01, base_threshold - delta),  # 确保阈值不小于0.01
+        'base_threshold': base_threshold,
+        'upper_threshold': min(1.5, base_threshold + delta)    # 确保阈值不大于1.5
+    }
+
+    times = {}
+    for key, threshold in thresholds.items():
+        idx = np.where(ccr_curve < threshold)[0]
+        if len(idx) == 0:
+            times[key.replace('threshold', 'time')] = None
+        else:
+            times[key.replace('threshold', 'time')] = T[idx[-1]]
+
+
+    return {
+        'lower_threshold': thresholds['lower_threshold'],
+        'upper_threshold': thresholds['upper_threshold'],
+        'base_threshold': thresholds['base_threshold'],
+        'lower_time': times['lower_time'],
+        'upper_time': times['upper_time'],
+        'base_time': times['base_time']
+    }
+
+#    return thresholds, times # 2025.12.05第二次修改提示：1.需要返回两个值 2.不能使用字典（可哈希）
 
 def compute_ccr_curve(Ne1: np.ndarray, Ne2: np.ndarray,
                      Ne_combined: np.ndarray, T: np.ndarray) -> np.ndarray:
@@ -235,10 +290,24 @@ def analyze_pairwise_ccr(pop1_name: str, pop2_name: str, base_dir: str,
 
     # 计算分歧时间
     t_div_ccr, used_threshold = divergence_time_ccr(T_common, ccr_curve, threshold=0.5)
-    # 2025.12.05更新：增加了可控制时间范围的模块，这里是配套模块
+    ### 2025.12.05更新：增加了可控制时间范围的模块，这里是配套模块
     if t_div_ccr is not None and t_div_ccr > 1e5:
         print("检测到分歧时间超过 1e5 代，不在分析范围内，设为 None")
         t_div_ccr = None
+
+    ### === 2025.12.05第二次更新：计算阈值波动范围内的分歧时间范围 ===
+    if t_div_ccr is not None:
+        # 计算阈值±0.05范围内的分歧时间
+        threshold_range_times = calculate_threshold_range(T_common, ccr_curve,
+                                                         used_threshold, delta=0.005)
+
+        # 计算阈值±0.1范围内的分歧时间（可选）
+        threshold_range_times_wide = calculate_threshold_range(T_common, ccr_curve,
+                                                              used_threshold, delta=0.01)
+    else:
+        threshold_range_times = None
+        threshold_range_times_wide = None
+    ### === 新增结束 ===
 
     # 输出结果
     print(f"\n{'='*50}")
@@ -247,6 +316,45 @@ def analyze_pairwise_ccr(pop1_name: str, pop2_name: str, base_dir: str,
     if t_div_ccr:
         print(f"分歧时间 (CCR方法, 阈值={used_threshold}): {t_div_ccr:.2e} 代")
         print(f"分歧时间 (CCR方法, 阈值={used_threshold}): {t_div_ccr:.0f} 代")
+
+        ### === 2025.12.05 第二次更新：输出阈值范围信息 ===
+        if threshold_range_times:
+            print(f"\n阈值波动分析 (±0.005):")
+            print(f"  阈值 {threshold_range_times['lower_threshold']:.3f} 对应的分歧时间: ", end="")
+            if threshold_range_times['lower_time']:
+                print(f"{threshold_range_times['lower_time']:.3e} 代 ({threshold_range_times['lower_time']:.0f} 代)")
+            else:
+                print("未检测到")
+
+            print(f"  阈值 {threshold_range_times['upper_threshold']:.3f} 对应的分歧时间: ", end="")
+            if threshold_range_times['upper_time']:
+                print(f"{threshold_range_times['upper_time']:.3e} 代 ({threshold_range_times['upper_time']:.0f} 代)")
+            else:
+                print("未检测到")
+
+            # 计算时间范围（如果有上下界）
+            valid_times = []
+            if threshold_range_times['lower_time']:
+                valid_times.append(threshold_range_times['lower_time'])
+            if threshold_range_times['upper_time']:
+                valid_times.append(threshold_range_times['upper_time'])
+
+            if len(valid_times) >= 2:
+                time_min = min(valid_times)
+                time_max = max(valid_times)
+                print(f"  分歧时间范围: {time_min:.2e} - {time_max:.2e} 代")
+                print(f"  分歧时间范围: {time_min:.0f} - {time_max:.0f} 代")
+                print(f"  时间跨度: {(time_max/time_min):.2f} 倍")
+
+        # 可选：输出更宽的范围
+        if threshold_range_times_wide:
+            print(f"\n阈值波动分析 (±0.01):")
+            if threshold_range_times_wide['lower_time']:
+                print(f"  阈值 {threshold_range_times_wide['lower_threshold']:.2f} 对应: {threshold_range_times_wide['lower_time']:.0f} 代")
+            if threshold_range_times_wide['upper_time']:
+                print(f"  阈值 {threshold_range_times_wide['upper_threshold']:.2f} 对应: {threshold_range_times_wide['upper_time']:.0f} 代")
+        ### === 新增结束 ===
+
     else:
         print(f"未检测到明显分歧时间 (尝试阈值最高至0.8，CCR始终高于阈值)")
         print("可能原因:")
@@ -348,8 +456,23 @@ def analyze_pairwise_ccr(pop1_name: str, pop2_name: str, base_dir: str,
 
     print(f"{'='*50}")
 
-    # 返回结果
-    return {
+#    # 返回结果
+#    return {
+#        'pop1': pop1_name,
+#        'pop2': pop2_name,
+#        'divergence_time': t_div_ccr,
+#        'threshold_used': used_threshold,
+#        'T_common': T_common,
+#        'ccr_curve': ccr_curve,
+#        'ne1': np.exp(ne1_interp),
+#        'ne2': np.exp(ne2_interp),
+#        'ne_merged': np.exp(ne_merged_interp),
+#        'ccr_min': ccr_min,  # 缺少这个
+#        'ccr_max': ccr_max,  # 缺少这个
+#        'output_path': output_path  # 缺少这个
+#    }
+    ### 2025.12.05第二次修改，配套部分 返回结果
+    result = {
         'pop1': pop1_name,
         'pop2': pop2_name,
         'divergence_time': t_div_ccr,
@@ -359,10 +482,32 @@ def analyze_pairwise_ccr(pop1_name: str, pop2_name: str, base_dir: str,
         'ne1': np.exp(ne1_interp),
         'ne2': np.exp(ne2_interp),
         'ne_merged': np.exp(ne_merged_interp),
-        'ccr_min': ccr_min,  # 缺少这个
-        'ccr_max': ccr_max,  # 缺少这个
-        'output_path': output_path  # 缺少这个
+        'ccr_min': ccr_min,
+        'ccr_max': ccr_max,
+        'output_path': str(output_path) if output_path else None
     }
+
+    # === 新增：添加阈值范围信息到返回结果 ===
+    if threshold_range_times:
+        result['threshold_range_±0.05'] = threshold_range_times
+
+    if threshold_range_times_wide:
+        result['threshold_range_±0.1'] = threshold_range_times_wide
+
+    # 如果有时间范围，计算平均时间
+    if t_div_ccr and threshold_range_times:
+        valid_times = []
+        if threshold_range_times['lower_time']:
+            valid_times.append(threshold_range_times['lower_time'])
+        if threshold_range_times['upper_time']:
+            valid_times.append(threshold_range_times['upper_time'])
+
+        if valid_times:
+            result['time_range_min'] = min(valid_times)
+            result['time_range_max'] = max(valid_times)
+            result['time_range_avg'] = np.mean(valid_times)
+
+    return result
 
 def batch_analyze_ccr(pop_pairs: List[Tuple[str, str]],
                      base_dir: str, output_dir: Optional[str] = None) -> Dict[str, Dict[str, Any]]:
@@ -423,6 +568,8 @@ def save_results_to_json(results: Dict[str, Dict[str, Any]],
                 return obj.tolist()
             elif isinstance(obj, np.generic):
                 return obj.item()
+            elif isinstance(obj, Path):  # 2025.12.05第二次新增：处理Path对象
+                return str(obj)
             else:
                 return obj
 
