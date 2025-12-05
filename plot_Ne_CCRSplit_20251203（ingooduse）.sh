@@ -200,6 +200,13 @@ def analyze_pairwise_ccr(pop1_name: str, pop2_name: str, base_dir: str,
         return None
 
     T_common = np.geomspace(T_min, T_max, 1000)
+    ### 2025.12.05修改，START FILTER: 仅保留 ≤ 1e5 代的数据 ###
+    mask = T_common <= 1e4
+    if not np.any(mask):
+        print("警告: 没有时间点 ≤ 1e5 代 — 检查输入 T_min, T_max")
+        return None
+    T_common = T_common[mask]
+    print(f"共同时间范围 (截断后): {T_common.min():.2e} 到 {T_common.max():.2e}")
     print(f"共同时间范围: {T_min:.2e} 到 {T_max:.2e}")
 
     # 插值到共同时间点
@@ -228,6 +235,10 @@ def analyze_pairwise_ccr(pop1_name: str, pop2_name: str, base_dir: str,
 
     # 计算分歧时间
     t_div_ccr, used_threshold = divergence_time_ccr(T_common, ccr_curve, threshold=0.5)
+    # 2025.12.05更新：增加了可控制时间范围的模块，这里是配套模块
+    if t_div_ccr is not None and t_div_ccr > 1e5:
+        print("检测到分歧时间超过 1e5 代，不在分析范围内，设为 None")
+        t_div_ccr = None
 
     # 输出结果
     print(f"\n{'='*50}")
