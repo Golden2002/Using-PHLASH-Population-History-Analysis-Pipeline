@@ -16,6 +16,8 @@ The pipeline uses GRCh38 reference genome coordinates. Chromosomes should be nam
 
 > Notice that all positions and windows in the scripts are based on the GRCh38 coordinate system.
 
+Sample size significantly affects cross-population history analyses. To ensure robust results, it is recommended to balance sample sizes across populations. For example, if a single population has 10 samples, when merging two populations, you can take 5 samples from each.
+
 ---
 
 # **VCF_Extraction.sh** 
@@ -282,6 +284,15 @@ results/
 
 
 # plot_Ne_CCRSplit_20251203
+This is a CCR (Cross-Coalescence Rate) analysis script for estimating population divergence times. Based on PHLASH results, the script calculates the cross-coalescence rate between two populations to infer their divergence time.
+
+## Requirements
+```bash
+pip install numpy matplotlib
+# 可选：安装科学绘图风格库
+pip install SciencePlots
+```
+
 **Python绘图可视化脚本使用示例**：
 - `--base_dir`：指定包含群体数据的基础目录路径
 - `--output_dir`：指定输出图表和结果文件的目录路径
@@ -289,25 +300,34 @@ results/
 - `--batch`：启用批量分析模式
 - `--pop_pairs`：批量分析的群体对列表
 - `--config`：使用配置文件指定所有参数
-  
+
+## Quick Start
+### Analysis of A Single Pair of Populations
+
 ```bash
-# 单对分析（使用默认目录）
+# 基本用法（使用默认参数）
+python ccr_analysis.py
+
+# 指定群体对
 python ccr_analysis.py --pop1 Jino --pop2 Han_N
 
-# 单对分析（指定基础目录）
-python ccr_analysis.py --pop1 Jino --pop2 Han_N --base_dir /path/to/phlash/results
-
-# 单对分析（指定基础目录和输出目录）
+# 指定基础目录和输出目录
 python ccr_analysis.py --pop1 Jino --pop2 Han_N \
   --base_dir /path/to/phlash/results \
   --output_dir /path/to/output
 
+# 指定CCR阈值
+python ccr_analysis.py --pop1 Jino --pop2 Han_N --threshold 0.6
+```
+### Analysis of Multiple Pairs of Population in One Roll
+
+```bash
 # 批量分析（使用默认目录）
 python ccr_analysis.py --batch --pop_pairs "Jino:Han_N" "Han_N:Tibetan"
 
 # 批量分析（指定基础目录）
 python ccr_analysis.py --batch --base_dir /path/to/phlash/results \
-  --pop_pairs "Jino:Han_N" "Han_N:Tibetan"
+  --pop_pairs "Korean:Han_N" "Han_N:Tibetan" "Japanese:Korean"
 
 # 批量分析（指定基础目录和输出目录）
 python ccr_analysis.py --batch \
@@ -320,4 +340,99 @@ python ccr_analysis.py --batch --config config.json
 
 # 显示详细帮助信息
 python ccr_analysis.py -h
+```
+
+## An Example of Configure Files
+
+Create a `config.json`
+```json
+{
+  "base_dir": "/path/to/phlash/results",
+  "output_dir": "/path/to/output",
+  "pop_pairs": [
+    "Jino:Han_N",
+    "Jino:Tibetan",
+    "Han_N:Tibetan"
+  ]
+}
+```
+
+## An Example of Input File Tree
+The script expects the following directory structure:
+
+```bash
+base_dir/
+├── Population1/
+│   └── models/
+│       └── phlash_results.pkl
+├── Population2/
+│   └── models/
+│       └── phlash_results.pkl
+└── Population1::Population2/
+    └── models/
+        └── phlash_results.pkl
+```
+
+## An Example of Output File Structure
+The default output directory is the one specified by the output_dir parameter. If not provided, the script will use base_dir instead.
+
+```bash
+output_dir/
+├── ccr_analysis_Jino_vs_Han_N.png
+├── ccr_analysis_Han_N_vs_Tibetan.png
+├── ccr_analysis_results.json
+└── ccr_analysis_*.png（其他群体对）
+```
+
+## An Example of Output: Results Printing On The Screen
+
+```text
+分析群体对: Han_N vs Tibetan
+参数设置:
+  群体1: Han_N
+  群体2: Tibetan
+  基础目录: /home/litianxing/100My_Jino/114.PHLASH/results
+  目录是否存在: True
+分析群体对: Han_N vs Tibetan
+找到合并群体文件: /home/litianxing/100My_Jino/114.PHLASH/results/Han_N::Tibetan/models/phlash_results.pkl
+加载数据...
+  群体 Han_N: 加载了 500 个后验样本
+  群体 Tibetan: 加载了 500 个后验样本
+  合并群体 Han_N::Tibetan: 加载了 500 个后验样本
+  群体 Han_N: 时间范围 2.11e-01 到 4.81e+07, Ne范围 1.06e+03 到 1.81e+04
+  群体 Tibetan: 时间范围 4.25e-01 到 4.67e+08, Ne范围 1.16e+03 到 3.11e+04
+  群体 Han_N::Tibetan: 时间范围 2.91e-01 到 8.02e+07, Ne范围 9.15e+02 到 1.56e+04
+共同时间范围 (截断后): 4.25e-01 到 9.95e+03
+共同时间范围: 4.25e-01 到 4.81e+07
+
+CCR曲线统计:
+  CCR最小值: 0.583
+  CCR最大值: 1.480
+  CCR平均值: 0.899
+  CCR中位数: 0.824
+使用替代阈值 0.6 检测到分歧时间
+
+==================================================
+CCR分析结果: Han_N vs Tibetan
+==================================================
+分歧时间 (CCR方法, 阈值=0.6): 5.20e+02 代
+分歧时间 (CCR方法, 阈值=0.6): 520 代
+
+阈值波动分析 (±0.005):
+  阈值 0.595 对应的分歧时间: 5.199e+02 代 (520 代)
+  阈值 0.605 对应的分歧时间: 5.199e+02 代 (520 代)
+  分歧时间范围: 5.20e+02 - 5.20e+02 代
+  分歧时间范围: 520 - 520 代
+  时间跨度: 1.00 倍
+
+阈值波动分析 (±0.01):
+  阈值 0.59 对应: 492 代
+  阈值 0.61 对应: 520 代
+
+图表已保存至: /home/litianxing/100My_Jino/114.PHLASH/results2/ccr_analysis_Han_N_vs_Tibetan.png
+==================================================
+
+分析完成!
+建议的分歧时间: 5.20e+02 代 (阈值=0.6)
+
 ```
