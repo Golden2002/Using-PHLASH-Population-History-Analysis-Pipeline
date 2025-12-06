@@ -418,9 +418,15 @@ def analyze_pairwise_ccr(pop1_name: str, pop2_name: str, base_dir: str,
           output_dir = base_dir
 
       output_dir = Path(output_dir)
+      ### 2025.12.06更新，目录控制功能
+      # 创建以群体对命名的子目录
+      subdir_name = f"{pop1_name}_vs_{pop2_name}"
+      output_subdir = output_dir / subdir_name
+      output_subdir.mkdir(parents=True, exist_ok=True)
       output_dir.mkdir(parents=True, exist_ok=True)
 
       output_path = output_dir / f"ccr_analysis_{pop1_name}_vs_{pop2_name}.png"
+#      output_path = output_subdir / f"ccr_analysis_{pop1_name}_vs_{pop2_name}.png" # 如果图片也想保存到子目录的话
 
       # 保存图片
       fig.savefig(output_path, dpi=300, bbox_inches='tight', pad_inches=0.1)
@@ -448,7 +454,13 @@ def analyze_pairwise_ccr(pop1_name: str, pop2_name: str, base_dir: str,
 
 #        output_dir = Path("/home/litianxing/100My_Jino/114.PHLASH")
         output_dir = Path(output_dir)
+        ### 2025.12.06 更新的配套部分
+        # 创建以群体对命名的子目录
+        subdir_name = f"{pop1_name}_vs_{pop2_name}"
+        output_subdir = output_dir / subdir_name
+        output_subdir.mkdir(parents=True, exist_ok=True)
         output_path = output_dir / f"ccr_analysis_{pop1_name}_vs_{pop2_name}_simple.png"
+#        output_path = output_subdir / f"ccr_analysis_{pop1_name}_vs_{pop2_name}_simple.png" # 如果图片也想保存到子目录的话
         fig.savefig(output_path, dpi=300, bbox_inches='tight')
         plt.close(fig)
 
@@ -484,7 +496,8 @@ def analyze_pairwise_ccr(pop1_name: str, pop2_name: str, base_dir: str,
         'ne_merged': np.exp(ne_merged_interp),
         'ccr_min': ccr_min,
         'ccr_max': ccr_max,
-        'output_path': str(output_path) if output_path else None
+        'output_path': str(output_path) if output_path else None,
+        'subdir_path': str(output_subdir) # 2025.12.06 更新，如果需要返回子目录路径，可以添加：
     }
 
     # === 新增：添加阈值范围信息到返回结果 ===
@@ -670,7 +683,24 @@ def main():
 
             # 保存结果到JSON文件
             if results:
-                save_results_to_json(results, args.output_json)
+#                save_results_to_json(results, args.output_json)
+
+                ### 2025.12.06 新修改
+                # 为每个结果创建对应的子目录保存JSON
+                for key, result in results.items():
+                    if 'subdir_path' in result:
+                        json_path = Path(result['subdir_path']) / args.output_json
+                    else:
+                        # 如果没有subdir_path，则创建
+                        pop1, pop2 = result['pop1'], result['pop2']
+                        subdir = Path(args.output_dir) / f"{pop1}_vs_{pop2}"
+                        subdir.mkdir(parents=True, exist_ok=True)
+                        json_path = subdir / args.output_json
+                    save_results_to_json({key: result}, str(json_path))
+
+                # 同时保存一个汇总文件到输出目录
+                total_json_path = Path(args.output_dir) / f"summary_{args.output_json}"
+                save_results_to_json(results, str(total_json_path))
                 print(f"\n批量分析完成!")
                 print(f"共分析了 {len(results)} 个群体对")
                 print(f"详细结果已保存至: {args.output_json}")
@@ -700,7 +730,20 @@ def main():
                 print("未检测到明显分歧时间")
 
             # 保存单对结果到JSON
-            save_results_to_json({f"{args.pop1}_vs_{args.pop2}": result}, args.output_json)
+#            save_results_to_json({f"{args.pop1}_vs_{args.pop2}": result}, args.output_json)
+
+            ### 2025.12.06 新修改，JSON文件保存到指定目录
+            # 使用subdir_path保存JSON
+
+            if 'subdir_path' in result:
+                json_path = Path(result['subdir_path']) / args.output_json
+            else:
+                # 如果没有subdir_path，则创建
+                subdir = Path(args.output_dir) / f"{args.pop1}_vs_{args.pop2}"
+                subdir.mkdir(parents=True, exist_ok=True)
+                json_path = subdir / args.output_json
+
+            save_results_to_json({f"{args.pop1}_vs_{args.pop2}": result}, str(json_path))
             return 0
         else:
             print(f"\n分析失败")
