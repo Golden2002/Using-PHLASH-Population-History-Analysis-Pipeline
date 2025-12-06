@@ -1,0 +1,4 @@
+# to install
+# python3 -m pip install /home/usr/.../dinopy-3.0.0
+
+dinopy @ file:///home/litianxing/100My_Jino/114.PHLASH/software/dinopy-3.0.0
