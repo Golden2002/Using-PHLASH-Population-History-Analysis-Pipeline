@@ -10,8 +10,12 @@ Two installation options are provided:
 1. **Pre-packaged CPU-only virtual environment** (recommended for quick setup)
 2. **Manual environment deployment from configuration files** (recommended for flexible or custom installations)
 
+## tips
 > Pre-built environment packages are available in the [Releases](https://github.com/Golden2002/Using-PHLASH-Population-History-Analysis-Pipeline/releases/tag/v0.0.1-alpha) section of this repository. You can download the latest version from there.
+> 
 > A provided `dinopy` library is in the reporsitory path `Using-PHLASH-Population-History-Analysis-Pipeline/Installation Guide/dinopy-3.0.0.tar.gz`
+>
+> The difference between `requirements.txt` and `CPU_only_requirements.txt` is whether modules pertinent to GPU calculation is removed. The pre-built environment packages are built basing on the latter to reduce the size of release files. Phlash works fine under CPU-only condition. 
 
 ---
 
@@ -110,13 +114,13 @@ Choose the desired requirements file:
 - **Full environment** (includes GPU packages):
 
   ```bash
-  python -m pip install -r /home/litianxing/100My_Jino/114.PHLASH/software/pip_requirements.txt
+  python -m pip install -r pip_requirements.txt
   ```
 
 - **CPU-only environment** (recommended for initial setup):
 
   ```bash
-  python -m pip install -r /home/litianxing/100My_Jino/114.PHLASH/software/CPU_only_requirements.txt
+  python -m pip install -r CPU_only_requirements.txt
   ```
 
 #### 4. For GPU support (if using CPU-only environment)
@@ -130,6 +134,13 @@ pip install cuda-python nvidia-cudnn-cu12 nvidia-cublas-cu12 nvidia-cusolver-cu1
 # Verify GPU availability
 python -c "import jax; print(jax.devices())"
 ```
+
+or more conviniently:
+
+```bash
+ python -m pip install -r requirements.txt
+```
+
 
 #### 5. Verify installation
 
@@ -290,4 +301,5 @@ For installation issues, please:
 ---
 
 This guide ensures that users can rapidly deploy the PHLASH pipeline and associated tools in a reproducible environment, minimizing setup errors and maximizing portability across Linux systems and HPC infrastructures.
+
 
