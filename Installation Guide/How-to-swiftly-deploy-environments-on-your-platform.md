@@ -10,6 +10,9 @@ Two installation options are provided:
 1. **Pre-packaged CPU-only virtual environment** (recommended for quick setup)
 2. **Manual environment deployment from configuration files** (recommended for flexible or custom installations)
 
+> Pre-built environment packages are available in the [Releases](https://github.com/Golden2002/Using-PHLASH-Population-History-Analysis-Pipeline/releases/tag/v0.0.1-alpha) section of this repository. You can download the latest version from there.
+> A provided `dinopy` library is in the reporsitory path `Using-PHLASH-Population-History-Analysis-Pipeline/Installation Guide/dinopy-3.0.0.tar.gz`
+
 ---
 
 ## Option 1: Pre-packaged CPU-only Virtual Environment
@@ -46,7 +49,7 @@ pip install dinopy-3.0.0.tar.gz
 #### 1. Download the environment archive
 
 ```bash
-wget <RELEASE_URL>/phlash_cpu_env_cpu_only.tar.gz -O ~/phlash_cpu_env_cpu_only.tar.gz
+wget https://github.com/Golden2002/Using-PHLASH-Population-History-Analysis-Pipeline/releases/tag/v0.0.1-alpha -O ~/phlash_cpu_env_cpu_only.tar.gz
 ```
 
 #### 2. Extract the environment
@@ -287,3 +290,4 @@ For installation issues, please:
 ---
 
 This guide ensures that users can rapidly deploy the PHLASH pipeline and associated tools in a reproducible environment, minimizing setup errors and maximizing portability across Linux systems and HPC infrastructures.
+
