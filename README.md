@@ -436,3 +436,90 @@ CCR分析结果: Han_N vs Tibetan
 建议的分歧时间: 5.20e+02 代 (阈值=0.6)
 
 ```
+
+# plot_phlash_commpare.py
+A Multi-Population Effective Population Size Comparison Script
+
+## Overview
+
+This script is designed to compare Phlash analysis results across multiple populations. It generates a comparative visualization of the inferred effective population size (Ne) over time, displaying the posterior median and credible intervals for each population.
+
+## Usage
+
+### 1. Requirements
+- Python 3.6 or higher
+- Required Python packages:
+  - `phlash`
+  - `numpy`
+  - `matplotlib`
+  - `pickle` (standard library)
+  - `pathlib` (standard library)
+
+### 2. Configuration
+
+Before execution, modify the following parameters in the script:
+
+```python
+# Population labels and corresponding Phlash result file paths
+POP_FILES = {
+    "Population_A": "/path/to/population_A/phlash_results.pkl",
+    "Population_B": "/path/to/population_B/phlash_results.pkl",
+    # Add additional populations as needed
+}
+
+OUTFIG = "phlash_Ne_compare.png"  # Output figure filename
+
+N_T = 1000      # Number of time points
+CI_LOW = 5      # Lower credible interval percentile
+CI_HIGH = 95    # Upper credible interval percentile
+```
+
+### 3. Execution
+
+Run the script from the command line:
+
+```bash
+python3 phlash_ne_comparison.py
+```
+
+Upon successful execution, the comparative figure will be generated in the current working directory as `phlash_Ne_compare.png`.
+
+## Output Description
+
+The generated figure contains the following elements:
+- **X-axis**: Time (in generations), plotted on a logarithmic scale.
+- **Y-axis**: Effective population size (Ne), plotted on a logarithmic scale.
+- **Solid lines**: Posterior median Ne trajectory for each population.
+- **Shaded regions**: Credible intervals (default: 5th to 95th percentiles).
+- **Colors**: Distinct colors automatically assigned to differentiate populations.
+
+## Notes
+
+1. Ensure all input Phlash result files are in the correct and consistent format.
+2. The script automatically excludes the time point zero (t=0) from the analysis.
+3. The time axis is constructed using geometric spacing to ensure uniform distribution on the logarithmic scale.
+4. The output figure is saved at 300 DPI resolution, suitable for publication.
+
+## Example Configuration
+
+```python
+# Example: Comparing four continental populations
+POP_FILES = {
+    "European": "./results/eur/models/phlash_results.pkl",
+    "African":  "./results/afr/models/phlash_results.pkl",
+    "East_Asian": "./results/eas/models/phlash_results.pkl",
+    "South_Asian": "./results/sas/models/phlash_results.pkl",
+}
+```
+
+## Expected Output
+
+Successful execution will produce the comparative figure and the following terminal message:
+```
+[✓] Figure saved to phlash_Ne_compare.png
+```
+
+The resulting visualization is useful for:
+- Comparative analysis of population demographic history
+- Identifying population expansions, bottlenecks, or periods of constant size
+- Highlighting differences in inferred demographic trajectories between groups
